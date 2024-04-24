@@ -104,7 +104,7 @@ public class MissingHashKeyInWriteStateTest {
     HollowSchema[] schemasWithoutActor =
         dataset.getSchemas()
             .stream()
-            .filter(schema -> !schema.getName().equals("Actor") && !schema.getName().equals("ActorName"))
+            .filter(schema -> !"Actor".equals(schema.getName()) && !"ActorName".equals(schema.getName()))
             .toArray(HollowSchema[]::new);
 
     InMemoryBlobStore blobStore = new InMemoryBlobStore();
@@ -153,7 +153,7 @@ public class MissingHashKeyInWriteStateTest {
     HollowSchema[] schemasWithoutActor =
         dataset.getSchemas()
             .stream()
-            .filter(schema -> !schema.getName().equals("Actor") && !schema.getName().equals("ActorName"))
+            .filter(schema -> !"Actor".equals(schema.getName()) && !"ActorName".equals(schema.getName()))
             .toArray(HollowSchema[]::new);
 
     InMemoryBlobStore blobStore = new InMemoryBlobStore();
@@ -281,10 +281,10 @@ public class MissingHashKeyInWriteStateTest {
         dataset.getSchemas()
             .stream()
             .filter(schema ->
-                !schema.getName().equals("Actor") &&
-                    !schema.getName().equals("ActorName") &&
-                    !schema.getName().equals("Award") &&
-                    !schema.getName().equals("AwardName"))
+                !"Actor".equals(schema.getName()) &&
+                    !"ActorName".equals(schema.getName()) &&
+                    !"Award".equals(schema.getName()) &&
+                    !"AwardName".equals(schema.getName()))
             .toArray(HollowSchema[]::new);
 
     InMemoryBlobStore blobStore = new InMemoryBlobStore();
@@ -333,10 +333,10 @@ public class MissingHashKeyInWriteStateTest {
         dataset.getSchemas()
             .stream()
             .filter(schema ->
-                !schema.getName().equals("Actor") &&
-                    !schema.getName().equals("ActorName") &&
-                    !schema.getName().equals("Award") &&
-                    !schema.getName().equals("AwardName"))
+                !"Actor".equals(schema.getName()) &&
+                    !"ActorName".equals(schema.getName()) &&
+                    !"Award".equals(schema.getName()) &&
+                    !"AwardName".equals(schema.getName()))
             .toArray(HollowSchema[]::new);
 
     InMemoryBlobStore blobStore = new InMemoryBlobStore();
@@ -378,9 +378,9 @@ public class MissingHashKeyInWriteStateTest {
     assertEquals(0, consumer.getStateEngine().getTypeState("MapOfActorToAward").getPopulatedOrdinals().cardinality());
   }
 
-  @HollowTypeName(name="Movie")
-  @HollowPrimaryKey(fields="id")
-  private static class MovieWithoutHashKeySet {
+    @HollowTypeName(name = "Movie")
+    @HollowPrimaryKey(fields = "id")
+    private static final class MovieWithoutHashKeySet {
     int id;
     @HollowTypeName(name="MovieTitle")
     String title;
@@ -393,9 +393,9 @@ public class MissingHashKeyInWriteStateTest {
     }
   }
 
-  @HollowTypeName(name="Movie")
-  @HollowPrimaryKey(fields="id")
-  private static class MovieWithHashKeySet {
+    @HollowTypeName(name = "Movie")
+    @HollowPrimaryKey(fields = "id")
+    private static final class MovieWithHashKeySet {
     int id;
     @HollowTypeName(name="MovieTitle")
     String title;
@@ -409,9 +409,9 @@ public class MissingHashKeyInWriteStateTest {
     }
   }
 
-  @HollowTypeName(name="Movie")
-  @HollowPrimaryKey(fields="id")
-  private static class MovieWithoutHashKeyMap {
+    @HollowTypeName(name = "Movie")
+    @HollowPrimaryKey(fields = "id")
+    private static final class MovieWithoutHashKeyMap {
     int id;
     @HollowTypeName(name="MovieTitle")
     String title;
@@ -424,9 +424,9 @@ public class MissingHashKeyInWriteStateTest {
     }
   }
 
-  @HollowTypeName(name="Movie")
-  @HollowPrimaryKey(fields="id")
-  private static class MovieWithHashKeyMap {
+    @HollowTypeName(name = "Movie")
+    @HollowPrimaryKey(fields = "id")
+    private static final class MovieWithHashKeyMap {
     int id;
     @HollowTypeName(name="MovieTitle")
     String title;
@@ -440,7 +440,7 @@ public class MissingHashKeyInWriteStateTest {
     }
   }
 
-  private static class Actor {
+    private static final class Actor {
     int id;
     @HollowTypeName(name="ActorName")
     String name;
@@ -451,7 +451,7 @@ public class MissingHashKeyInWriteStateTest {
     }
   }
 
-  private static class Award {
+    private static final class Award {
     int id;
     @HollowTypeName(name="AwardName")
     String name;

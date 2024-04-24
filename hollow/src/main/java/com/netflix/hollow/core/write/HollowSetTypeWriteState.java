@@ -39,19 +39,19 @@ public class HollowSetTypeWriteState extends HollowTypeWriteState {
     private int bitsPerSetPointer;
     private int bitsPerElement;
     private int bitsPerSetSizeValue;
-    private long totalOfSetBuckets[];
+    private long[] totalOfSetBuckets;
 
     /// data required for writing snapshot or delta
     private int maxOrdinal;
-    private int maxShardOrdinal[];
-    private FixedLengthElementArray setPointersAndSizesArray[];
-    private FixedLengthElementArray elementArray[];
+    private int[] maxShardOrdinal;
+    private FixedLengthElementArray[] setPointersAndSizesArray;
+    private FixedLengthElementArray[] elementArray;
 
     /// additional data required for writing delta
-    private int numSetsInDelta[];
-    private long numBucketsInDelta[];
-    private ByteDataArray deltaAddedOrdinals[];
-    private ByteDataArray deltaRemovedOrdinals[];
+    private int[] numSetsInDelta;
+    private long[] numBucketsInDelta;
+    private ByteDataArray[] deltaAddedOrdinals;
+    private ByteDataArray[] deltaRemovedOrdinals;
 
     public HollowSetTypeWriteState(HollowSetSchema schema) {
         this(schema, -1);
@@ -73,8 +73,9 @@ public class HollowSetTypeWriteState extends HollowTypeWriteState {
     }
 
     private void gatherStatistics() {
-        if(numShards == -1)
+        if(numShards == -1) {
             calculateNumShards();
+        }
         revNumShards = numShards;
 
         int maxElementOrdinal = 0;
@@ -82,9 +83,10 @@ public class HollowSetTypeWriteState extends HollowTypeWriteState {
         int maxOrdinal = ordinalMap.maxOrdinal();
         
         maxShardOrdinal = new int[numShards];
-        int minRecordLocationsPerShard = (maxOrdinal + 1) / numShards; 
-        for(int i=0;i<numShards;i++)
-            maxShardOrdinal[i] = (i < ((maxOrdinal + 1) & (numShards - 1))) ? minRecordLocationsPerShard : minRecordLocationsPerShard - 1;
+        int minRecordLocationsPerShard = (maxOrdinal + 1) / numShards;
+        for (int i = 0;i < numShards;i++) {
+            maxShardOrdinal[i] = i < ((maxOrdinal + 1) & (numShards - 1)) ? minRecordLocationsPerShard : minRecordLocationsPerShard - 1;
+        }
         
         int maxSetSize = 0;
         ByteData data = ordinalMap.getByteData().getUnderlyingArray();
@@ -98,8 +100,9 @@ public class HollowSetTypeWriteState extends HollowTypeWriteState {
 
                 int numBuckets = HashCodes.hashTableSize(size);
 
-                if(size > maxSetSize)
+                if(size > maxSetSize) {
                     maxSetSize = size;
+                }
 
                 pointer += VarInt.sizeOfVInt(size);
 
@@ -108,8 +111,9 @@ public class HollowSetTypeWriteState extends HollowTypeWriteState {
                 for(int j=0;j<size;j++) {
                     int elementOrdinalDelta = VarInt.readVInt(data, pointer);
                     elementOrdinal += elementOrdinalDelta;
-                    if(elementOrdinal > maxElementOrdinal)
+                    if(elementOrdinal > maxElementOrdinal) {
                         maxElementOrdinal = elementOrdinal;
+                    }
                     pointer += VarInt.sizeOfVInt(elementOrdinalDelta);
                     pointer += VarInt.nextVLongSize(data, pointer);  /// discard hashed bucket
                 }
@@ -120,8 +124,9 @@ public class HollowSetTypeWriteState extends HollowTypeWriteState {
         
         long maxShardTotalOfSetBuckets = 0;
         for(int i=0;i<numShards;i++) {
-            if(totalOfSetBuckets[i] > maxShardTotalOfSetBuckets)
+            if(totalOfSetBuckets[i] > maxShardTotalOfSetBuckets) {
                 maxShardTotalOfSetBuckets = totalOfSetBuckets[i];
+            }
         }
 
         bitsPerElement = 64 - Long.numberOfLeadingZeros(maxElementOrdinal + 1);
@@ -145,8 +150,9 @@ public class HollowSetTypeWriteState extends HollowTypeWriteState {
 
                 int numBuckets = HashCodes.hashTableSize(size);
 
-                if(size > maxSetSize)
+                if(size > maxSetSize) {
                     maxSetSize = size;
+                }
 
                 pointer += VarInt.sizeOfVInt(size);
 
@@ -155,8 +161,9 @@ public class HollowSetTypeWriteState extends HollowTypeWriteState {
                 for(int j=0;j<size;j++) {
                     int elementOrdinalDelta = VarInt.readVInt(data, pointer);
                     elementOrdinal += elementOrdinalDelta;
-                    if(elementOrdinal > maxElementOrdinal)
+                    if(elementOrdinal > maxElementOrdinal) {
                         maxElementOrdinal = elementOrdinal;
+                    }
                     pointer += VarInt.sizeOfVInt(elementOrdinalDelta);
                     pointer += VarInt.nextVLongSize(data, pointer);  /// discard hashed bucket
                 }
@@ -173,8 +180,9 @@ public class HollowSetTypeWriteState extends HollowTypeWriteState {
         projectedSizeOfType += (bitsPerElement * totalOfSetBuckets) / 8;
         
         numShards = 1;
-        while(stateEngine.getTargetMaxTypeShardSize() * numShards < projectedSizeOfType) 
+        while (stateEngine.getTargetMaxTypeShardSize() * numShards < projectedSizeOfType) {
             numShards *= 2;
+        }
     }
 
     @Override
@@ -192,7 +200,7 @@ public class HollowSetTypeWriteState extends HollowTypeWriteState {
 
         ByteData data = ordinalMap.getByteData().getUnderlyingArray();
 
-        int bucketCounter[] = new int[numShards];
+        int[] bucketCounter = new int[numShards];
         int shardMask = numShards - 1;
 
         HollowWriteStateEnginePrimaryKeyHasher primaryKeyHasher = null;
@@ -238,12 +246,13 @@ public class HollowSetTypeWriteState extends HollowTypeWriteState {
 
                     elementOrdinal += elementOrdinalDelta;
 
-                    if(primaryKeyHasher != null)
+                    if(primaryKeyHasher != null) {
                         hashedBucket = primaryKeyHasher.getRecordHash(elementOrdinal) & (numBuckets - 1);
+                    }
 
                     while(elementArray[shardNumber].getElementValue((long)bitsPerElement * (bucketCounter[shardNumber] + hashedBucket), bitsPerElement) != ((1L << bitsPerElement) - 1)) {
                         hashedBucket++;
-                        hashedBucket &= (numBuckets - 1);
+                        hashedBucket &= numBuckets - 1;
                     }
 
                     elementArray[shardNumber].clearElementValue((long)bitsPerElement * (bucketCounter[shardNumber] + hashedBucket), bitsPerElement);
@@ -359,10 +368,10 @@ public class HollowSetTypeWriteState extends HollowTypeWriteState {
 
         ByteData data = ordinalMap.getByteData().getUnderlyingArray();
 
-        int setCounter[] = new int[numShards];
-        long bucketCounter[] = new long[numShards];
-        int previousRemovedOrdinal[] = new int[numShards];
-        int previousAddedOrdinal[] = new int[numShards];
+        int[] setCounter = new int[numShards];
+        long[] bucketCounter = new long[numShards];
+        int[] previousRemovedOrdinal = new int[numShards];
+        int[] previousAddedOrdinal = new int[numShards];
 
         HollowWriteStateEnginePrimaryKeyHasher primaryKeyHasher = null;
 
@@ -407,12 +416,13 @@ public class HollowSetTypeWriteState extends HollowTypeWriteState {
                     readPointer += VarInt.sizeOfVInt(hashedBucket);
                     elementOrdinal += elementOrdinalDelta;
 
-                    if(primaryKeyHasher != null)
+                    if(primaryKeyHasher != null) {
                         hashedBucket = primaryKeyHasher.getRecordHash(elementOrdinal) & (numBuckets - 1);
+                    }
 
                     while(elementArray[shardNumber].getElementValue((long)bitsPerElement * (bucketCounter[shardNumber] + hashedBucket), bitsPerElement) != ((1L << bitsPerElement) - 1)) {
                         hashedBucket++;
-                        hashedBucket &= (numBuckets - 1);
+                        hashedBucket &= numBuckets - 1;
                     }
 
                     elementArray[shardNumber].clearElementValue((long)bitsPerElement * (bucketCounter[shardNumber] + hashedBucket), bitsPerElement);
